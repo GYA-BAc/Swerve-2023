@@ -38,20 +38,14 @@ py robot/robot.py deploy --skip-tests --no-version-check
 
 class MyRobot(MagicRobot):
 
-    drive: swervedrive.SwerveDrive
-
-
-    frontLeftModule_cfg = ModuleConfig(sd_prefix='FrontLeft_Module', zero=2.97, inverted=True, allow_reverse=True)
-    frontRightModule_cfg = ModuleConfig(sd_prefix='FrontRight_Module', zero=2.69, inverted=False, allow_reverse=True)
-    rearLeftModule_cfg = ModuleConfig(sd_prefix='RearLeft_Module', zero=0.18, inverted=True, allow_reverse=True)
-    rearRightModule_cfg = ModuleConfig(sd_prefix='RearRight_Module', zero=4.76, inverted=False, allow_reverse=True)
 
     def createObjects(self):
+
         
-        self.frontLeftModule = swervemodule.SwerveModule()
-        self.frontRightModule = swervemodule.SwerveModule()
-        self.rearLeftModule = swervemodule.SwerveModule()
-        self.rearRightModule = swervemodule.SwerveModule()
+        # self.frontLeftModule = swervemodule.SwerveModule()
+        # self.frontRightModule = swervemodule.SwerveModule()
+        # self.rearLeftModule = swervemodule.SwerveModule()
+        # self.rearRightModule = swervemodule.SwerveModule()
 
         self.controller = wpilib.XboxController(0)
 
@@ -65,24 +59,36 @@ class MyRobot(MagicRobot):
         self.rearLeftModule_rotateMotor = ctre.WPI_TalonSRX(4)
         self.rearRightModule_rotateMotor = ctre.WPI_TalonSRX(2)
 
-        self.frontLeftModule_encoder = 
-        self.frontRightModule_encoder = 
-        self.rearLeftModule_encoder = 
-        self.rearRightModule_encoder = 
+        self.frontLeftModule_encoder = self.frontLeftModule_rotateMotor
+        self.frontRightModule_encoder = self.frontRightModule_rotateMotor
+        self.rearLeftModule_encoder = self.rearLeftModule_driveMotor
+        self.rearRightModule_encoder = self.rearRightModule_driveMotor
+
+        self.frontLeftModule_cfg = {"sd_prefix":'frontLeft_Module', "inverted":True, "allow_reverse":True, "encoder":self.frontLeftModule_encoder}
+        self.frontRightModule_cfg = {"sd_prefix":'frontRight_Module', "inverted":False, "allow_reverse":True, "encoder":self.frontRightModule_encoder}
+        self.rearLeftModule_cfg = {"sd_prefix":'rearLeft_Module', "inverted":True, "allow_reverse":True, "encoder":self.rearLeftModule_encoder}
+        self.rearRightModule_cfg = {"sd_prefix":'rearRight_Module', "inverted":False, "allow_reverse":True, "encoder":self.rearRightModule_encoder}
+
+        self.frontLeftModule = swervemodule.SwerveModule(self.frontLeftModule_cfg, self.frontLeftModule_driveMotor, self.frontLeftModule_rotateMotor)
+        self.frontRightModule = swervemodule.SwerveModule(self.frontRightModule_cfg, self.frontRightModule_driveMotor, self.frontRightModule_rotateMotor)
+        self.rearLeftModule = swervemodule.SwerveModule(self.rearLeftModule_cfg, self.rearLeftModule_driveMotor, self.rearLeftModule_rotateMotor)
+        self.rearRightModule = swervemodule.SwerveModule(self.rearRightModule_cfg, self.rearRightModule_driveMotor, self.rearRightModule_rotateMotor)
+
+        self.drive = swervedrive.SwerveDrive(self.frontLeftModule, self.frontRightModule, self.rearLeftModule, self.rearRightModule)
 
     def autonomousInit(self):
         self.drive.flush()
     
-    def teleopInit(self):
-        self.drive.flush()
+    # def teleopInit(self):
+    #     self.drive.flush()
     
     def move(self, x, y, rcw):
         self.drive.move(x, y, rcw)
 
     def teleopPeriodic(self):
-        self.move(self.controller.getLeftY, self.controller.getLeftX, self.controller.getRightX)
+        self.move(self.controller.getLeftY(), self.controller.getLeftX(), self.controller.getRightX())
 
-
+        self.drive.execute()
 
 if __name__ == "__main__":
     wpilib.run(MyRobot)
